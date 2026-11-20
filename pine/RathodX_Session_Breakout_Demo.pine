@@ -1,0 +1,50 @@
+//@version=6
+indicator("RathodX | Session Range & Confirmed Breakout (Demo)", overlay = true)
+
+// Educational portfolio sample. No trading orders are executed.
+// Intended for intraday charts; configurable IANA time zone handles DST.
+string sessionTimeZone = input.string("Asia/Kolkata", "Session time zone", options = ["Asia/Kolkata", "America/New_York", "Etc/UTC"])
+string rangeSession = input.session("0530-0915:1234567", "Range-building session")
+string signalSession = input.session("1830-2100:1234567", "Signal window")
+bool showDeveloping = input.bool(false, "Show developing range (changes while forming)")
+
+bool inRange = not na(time(timeframe.period, rangeSession, sessionTimeZone))
+bool inSignals = not na(time(timeframe.period, signalSession, sessionTimeZone))
+bool rangeBegins = inRange and not inRange[1]
+bool rangeEnds = not inRange and inRange[1]
+
+var float developingHigh = na
+var float developingLow = na
+var float frozenHigh = na
+var float frozenLow = na
+
+if rangeBegins
+    developingHigh := high
+    developingLow := low
+    frozenHigh := na
+    frozenLow := na
+else if inRange
+    developingHigh := math.max(nz(developingHigh, high), high)
+    developingLow := math.min(nz(developingLow, low), low)
+
+// The completed range is frozen at the first bar after the range session.
+if rangeEnds
+    frozenHigh := developingHigh
+    frozenLow := developingLow
+
+plot(frozenHigh, "Confirmed range high", color = color.new(color.lime, 0), linewidth = 2, style = plot.style_linebr)
+plot(frozenLow, "Confirmed range low", color = color.new(color.red, 0), linewidth = 2, style = plot.style_linebr)
+plot(showDeveloping and inRange ? developingHigh : na, "Developing high", color = color.new(color.lime, 65), style = plot.style_linebr)
+plot(showDeveloping and inRange ? developingLow : na, "Developing low", color = color.new(color.red, 65), style = plot.style_linebr)
+
+// Compute crosses each bar, then gate signals on confirmed closes only.
+bool crossesAbove = ta.crossover(close, frozenHigh)
+bool crossesBelow = ta.crossunder(close, frozenLow)
+bool longSignal = barstate.isconfirmed and inSignals and not na(frozenHigh) and crossesAbove
+bool shortSignal = barstate.isconfirmed and inSignals and not na(frozenLow) and crossesBelow
+
+plotshape(longSignal, title = "Confirmed long breakout", style = shape.triangleup, location = location.belowbar, color = color.lime, size = size.small, text = "L")
+plotshape(shortSignal, title = "Confirmed short breakout", style = shape.triangledown, location = location.abovebar, color = color.red, size = size.small, text = "S")
+
+alertcondition(longSignal, title = "RathodX confirmed range-high breakout", message = "Confirmed close above completed range high on {{ticker}} / {{interval}}")
+alertcondition(shortSignal, title = "RathodX confirmed range-low breakout", message = "Confirmed close below completed range low on {{ticker}} / {{interval}}")
