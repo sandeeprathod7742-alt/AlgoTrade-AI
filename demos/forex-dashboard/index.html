@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RathodX | FX Market Data Dashboard Demo</title>
+<style>
+:root{color-scheme:dark;--bg:#090d15;--card:#121a27;--line:#283547;--text:#e8eef8;--muted:#98aac3;--gold:#efc773;--up:#58d1a0;--down:#ef7b8a}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(150deg,#131f2c,#090d15 52%);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:22px max(22px,calc((100vw - 1230px)/2));border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{font-size:22px;font-weight:800;letter-spacing:.5px}.brand span{color:var(--gold)}.demo{font-size:12px;color:#ffe4a8;background:#4c3918;border:1px solid #8a6b34;border-radius:99px;padding:5px 10px}
+main{max-width:1230px;margin:28px auto;padding:0 22px}h1{font-size:28px;margin:6px 0}p{color:var(--muted)}
+.top{display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:24px}.status{color:var(--muted);font-size:13px}.status strong{color:var(--up)}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:20px 0}.card,.panel{background:rgba(18,26,39,.92);border:1px solid var(--line);border-radius:14px}
+.card{padding:17px;text-align:left;cursor:pointer;color:inherit;transition:border-color .2s}.card:hover,.card.active{border-color:var(--gold)}
+.pair{font-weight:700;font-size:15px}.rate{font-weight:750;font-variant-numeric:tabular-nums;font-size:23px;margin:9px 0}.change{font-size:13px;font-variant-numeric:tabular-nums}.up{color:var(--up)}.down{color:var(--down)}
+.layout{display:grid;grid-template-columns:2fr 1fr;gap:18px}.panel{padding:22px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.eyebrow{font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin:0 0 5px}.big{font-size:36px;line-height:1.1;font-weight:800;letter-spacing:-.03em;margin:9px 0;font-variant-numeric:tabular-nums}
+svg{width:100%;height:240px;display:block;margin-top:16px}path.grid{stroke:var(--line);stroke-width:1}polyline{fill:none;stroke:var(--gold);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+dl{margin:12px 0 0;display:grid;grid-template-columns:1fr auto;gap:13px;font-variant-numeric:tabular-nums}dt{color:var(--muted)}dd{margin:0;font-weight:650}
+button{font:inherit}.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}select,input{background:#0e1522;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:10px}
+.note{margin-top:18px;background:#121825;border-left:3px solid var(--gold);padding:13px 16px;color:var(--muted);line-height:1.55;border-radius:5px}
+footer{max-width:1230px;margin:24px auto 40px;padding:0 22px;color:var(--muted);font-size:12px}
+@media(max-width:950px){.cards{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}}@media(max-width:520px){.cards{grid-template-columns:1fr 1fr}.rate{font-size:19px}.panel{padding:16px}h1{font-size:23px}.big{font-size:30px}}
+</style>
+</head>
+<body>
+<header><div class="brand">RATHOD<span>X</span> <small style="font-size:12px;color:var(--muted);font-weight:500">MARKET DATA</small></div><div class="demo">DEMO • SIMULATED FX QUOTES</div></header>
+<main>
+<div class="top"><div><div class="eyebrow">FOREX MARKET OVERVIEW</div><h1>Currency dashboard</h1><p>Responsive data visualization concept · No broker connection or live feed</p></div>
+<div class="toolbar"><label for="filter">Search pair</label><input id="filter" placeholder="EUR, USD, GBP..." aria-label="Filter currency pairs"><label for="speed">Update</label><select id="speed" aria-label="Simulation interval"><option value="3000">3 sec</option><option value="1000">1 sec</option><option value="0">Paused</option></select></div></div>
+<div class="status">● <strong id="state">Simulation active</strong> · Values are illustrative, not tradable prices</div>
+<div class="cards" id="cards"></div>
+<div class="layout">
+<section class="panel"><div class="section-head"><div><div class="eyebrow">SELECTED PAIR</div><div id="selected" style="font-size:22px;font-weight:750">EUR / USD</div></div><div class="change" id="selectedChange"></div></div>
+<div class="big" id="selectedRate">—</div><svg viewBox="0 0 720 240" role="img" aria-label="Illustrative line chart showing simulated recent market movement" preserveAspectRatio="none"><path class="grid" d="M0 40 H720 M0 120 H720 M0 200 H720"/><polyline id="chart" points=""/></svg>
+<p class="status" style="margin:0">Last 60 simulated ticks. Generated in this browser; no network connection.</p></section>
+<aside class="panel"><div class="eyebrow">QUOTE DETAILS</div><h2 style="margin:4px 0 22px">Market snapshot</h2><dl><dt>Bid (simulated)</dt><dd id="bid">—</dd><dt>Ask (simulated)</dt><dd id="ask">—</dd><dt>Spread (illustrative)</dt><dd id="spread">—</dd><dt>Session high</dt><dd id="high">—</dd><dt>Session low</dt><dd id="low">—</dd><dt>Points sampled</dt><dd id="count">—</dd><dt>Provider</dt><dd>Demo generator</dd></dl></aside>
+</div>
+<div class="note"><b>Integration boundary:</b> For a real client implementation, a server-side API adapter should authenticate to the customer's licensed market-data provider, normalize symbols/timestamps and error states, rate-limit upstream calls and forward sanitized quotes to the browser using HTTPS/WebSocket. Never embed private provider API keys in frontend code. This sample intentionally contains no trading functions.</div>
+</main>
+<footer>RathodX • Original front-end demonstration for scoped freelance proposals • Not investment advice or live market data.</footer>
+<script>
+(function(){
+"use strict";
+var seeds=[
+{pair:"EUR/USD",base:1.16421,dec:5,spread:0.00013},
+{pair:"GBP/USD",base:1.31748,dec:5,spread:0.00018},
+{pair:"USD/JPY",base:153.782,dec:3,spread:0.017},
+{pair:"AUD/USD",base:0.65531,dec:5,spread:0.00014},
+{pair:"USD/CAD",base:1.40216,dec:5,spread:0.0002},
+{pair:"USD/CHF",base:0.80124,dec:5,spread:0.00016},
+{pair:"NZD/USD",base:0.57319,dec:5,spread:0.00019},
+{pair:"EUR/GBP",base:0.88374,dec:5,spread:0.00018}
+];
+var pairs=seeds.map(function(p,i){var history=[];for(var j=0;j<60;j++){history.push(p.base*(1+0.00025*Math.sin(j/8+i)+0.0001*Math.sin(j/3+i)));}return Object.assign({},p,{history:history,price:history[59],high:Math.max.apply(null,history),low:Math.min.apply(null,history)});});
+var chosen=0,timer=null;
+var cards=document.getElementById("cards"),input=document.getElementById("filter"),speed=document.getElementById("speed");
+function fmt(p,v){return v.toFixed(p.dec);}
+function pct(p){return (p.price/p.base-1)*100;}
+function element(tag,klass,txt){var el=document.createElement(tag);if(klass)el.className=klass;if(txt!==undefined)el.textContent=txt;return el;}
+function paintCards(){cards.replaceChildren();var q=input.value.toUpperCase().replace(/\s/g,"");pairs.forEach(function(p,i){if(p.pair.replace("/","").indexOf(q)<0)return;var b=element("button","card"+(chosen===i?" active":"" ));b.type="button";b.setAttribute("aria-pressed",String(chosen===i));b.appendChild(element("div","pair",p.pair));b.appendChild(element("div","rate",fmt(p,p.price)));var d=pct(p);b.appendChild(element("div","change "+(d>=0?"up":"down"),(d>=0?"+":"")+d.toFixed(3)+"% · demo"));b.addEventListener("click",function(){chosen=i;render();});cards.appendChild(b);});if(!cards.childElementCount)cards.appendChild(element("p","status","No matching pairs"));}
+function render(){var p=pairs[chosen],d=pct(p);document.getElementById("selected").textContent=p.pair;document.getElementById("selectedRate").textContent=fmt(p,p.price);var c=document.getElementById("selectedChange");c.textContent=(d>=0?"+":"")+d.toFixed(3)+"% from simulated baseline";c.className="change "+(d>=0?"up":"down");var list=p.history,min=Math.min.apply(null,list),max=Math.max.apply(null,list),range=max-min||0.000001;document.getElementById("chart").setAttribute("points",list.map(function(v,i){return (i*720/(list.length-1)).toFixed(1)+","+(212-(v-min)*180/range).toFixed(1);}).join(" "));
+document.getElementById("bid").textContent=fmt(p,p.price-p.spread/2);document.getElementById("ask").textContent=fmt(p,p.price+p.spread/2);document.getElementById("spread").textContent=fmt(p,p.spread);document.getElementById("high").textContent=fmt(p,p.high);document.getElementById("low").textContent=fmt(p,p.low);document.getElementById("count").textContent=String(p.history.length);paintCards();}
+function tick(){pairs.forEach(function(p){var last=p.history[p.history.length-1];p.price=Math.max(0.00001,last*(1+(Math.random()-.5)*0.00014));p.history.push(p.price);if(p.history.length>60)p.history.shift();p.high=Math.max(p.high,p.price);p.low=Math.min(p.low,p.price);});render();}
+function schedule(){if(timer!==null)clearInterval(timer);var ms=Number(speed.value);document.getElementById("state").textContent=ms?"Simulation active":"Simulation paused";timer=ms?setInterval(tick,ms):null;}
+input.addEventListener("input",paintCards);speed.addEventListener("change",schedule);render();schedule();
+})();
+</script>
+</body></html>
